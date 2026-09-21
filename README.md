@@ -30,7 +30,7 @@
 需要 macOS 12 或更高版本，并安装 Xcode Command Line Tools。
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/caoyiqin29/Donna.git
 cd daily-todo-macos
 ./scripts/build.sh
 open build/每日待办.app
