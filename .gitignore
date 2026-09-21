@@ -1,0 +1,11 @@
+.DS_Store
+build/
+.build/
+.module-cache/
+*.log
+*.dmg
+*.zip
+*.xcarchive
+xcuserdata/
+DerivedData/
+floating-todo-*-data.json
