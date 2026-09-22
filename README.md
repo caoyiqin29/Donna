@@ -6,6 +6,12 @@
   <img src="Resources/AppIcon.png" width="180" alt="每日待办图标">
 </p>
 
+## 演示
+
+<p align="center">
+  <img src="demo/daily-todo-demo.gif" width="520" alt="每日待办输入与完成任务演示">
+</p>
+
 ## 功能
 
 - 桌面悬浮圆球，点击即用

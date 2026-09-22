@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
+    body {
+      display: grid;
+      place-items: center;
+      background: #f2f3f5;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+      letter-spacing: 0;
+    }
+    .panel {
+      position: relative;
+      width: 390px;
+      height: 600px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 16px;
+      background: rgba(24,25,28,.91);
+      box-shadow: 0 20px 52px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.18);
+      color: #eceef1;
+    }
+    .traffic { position: absolute; top: 14px; left: 14px; display: flex; gap: 8px; }
+    .traffic span { width: 12px; height: 12px; border-radius: 50%; }
+    .red { background: #ff5f57; }
+    .yellow { background: #febc2e; }
+    .green { background: #28c840; }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 48px 32px 14px;
+      height: 25px;
+    }
+    h1 { margin: 0; font-size: 15px; line-height: 22px; font-weight: 650; }
+    .tools { display: flex; align-items: center; gap: 6px; color: #aeb7c5; }
+    .tool { width: 28px; height: 24px; display: grid; place-items: center; }
+    .tool svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .list { position: relative; margin: 0 32px; height: 190px; }
+    .todo {
+      position: absolute;
+      left: 0;
+      display: grid;
+      grid-template-columns: 20px 34px minmax(0,1fr);
+      align-items: start;
+      column-gap: 3px;
+      width: 100%;
+      min-height: 30px;
+      transition: none;
+    }
+    .check {
+      width: 18px;
+      height: 18px;
+      margin-top: 3px;
+      display: grid;
+      place-items: center;
+      border: 1.5px solid #8f9aa9;
+      border-radius: 50%;
+      color: white;
+      font-size: 12px;
+      line-height: 1;
+    }
+    .priority {
+      padding-left: 2px;
+      font-family: "Avenir Next", "PingFang SC", sans-serif;
+      font-size: 13px;
+      line-height: 24px;
+      font-weight: 700;
+      font-style: oblique 7deg;
+    }
+    .p0 { color: #f15b9a; }
+    .p1 { color: #f2b705; }
+    .title { padding: 1px 4px 1px 0; font-size: 14px; line-height: 22px; font-weight: 450; color: #f0f3f7; }
+    .done .check { border-color: #f2b705; background: #f2b705; }
+    .done .title { color: #9aa3b1; }
+    .typing .title { color: #f0f3f7; }
+    .caret {
+      display: inline-block;
+      width: 1.5px;
+      height: 17px;
+      margin-left: 1px;
+      vertical-align: -3px;
+      background: #f1f4f8;
+    }
+    .hint {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 28px;
+      color: #747a83;
+      font-size: 11px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <section class="panel">
+    <div class="traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
+    <header class="header">
+      <h1>每日任务</h1>
+      <div class="tools">
+        <span class="tool"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M6.35 17.65l-1.42 1.42M19.07 4.93l-1.42 1.42"/></svg></span>
+        <span class="tool"><svg viewBox="0 0 24 24"><path d="M4 7h8M4 12h6M4 17h4M17 5v14M14 16l3 3 3-3"/></svg></span>
+        <span class="tool"><svg viewBox="0 0 32 32"><path d="M13 14V6.7a3 3 0 0 1 6 0V14M8.5 14h15M9.5 14l-1.8 11h16.6l-1.8-11M12.8 25v-5.2M16 25v-5.2M19.2 25v-5.2"/></svg></span>
+      </div>
+    </header>
+    <div class="list">
+      <div class="todo task-a">
+        <span class="check"><span class="tick"></span></span><span class="priority p0">P0</span><span class="title">提交周报 10:00</span>
+      </div>
+      <div class="todo task-b">
+        <span class="check"></span><span class="priority p1">P1</span><span class="title">回复项目邮件 14:30</span>
+      </div>
+      <div class="todo task-c typing">
+        <span class="check"></span><span class="priority p1">P1</span><span class="title"><span class="typed"></span><span class="caret"></span></span>
+      </div>
+    </div>
+    <div class="hint">任务内容仅保存在本地</div>
+  </section>
+  <script>
+    const frame = Number(new URLSearchParams(location.search).get('frame') || 0);
+    const text = '整理明日计划 18:00';
+    const typingStart = 5;
+    const typedCount = Math.max(0, Math.min(text.length, frame - typingStart));
+    const moveStart = 35;
+    const moveEnd = 42;
+    const progress = Math.max(0, Math.min(1, (frame - moveStart) / (moveEnd - moveStart)));
+
+    document.querySelector('.typed').textContent = text.slice(0, typedCount);
+    document.querySelector('.task-c').style.opacity = frame < 3 ? '0' : '1';
+    document.querySelector('.caret').style.opacity = frame >= 32 ? '0' : (frame % 6 < 4 ? '1' : '0');
+
+    const taskA = document.querySelector('.task-a');
+    const taskB = document.querySelector('.task-b');
+    const taskC = document.querySelector('.task-c');
+    taskA.style.transform = `translateY(${progress * 80}px)`;
+    taskB.style.transform = `translateY(${-progress * 40 + 40}px)`;
+    taskC.style.transform = `translateY(${80 - progress * 40}px)`;
+
+    if (progress > 0) {
+      taskA.classList.add('done');
+      taskA.querySelector('.tick').textContent = '✓';
+      taskA.querySelector('.check').style.background = `rgba(242,183,5,${progress})`;
+      taskA.querySelector('.check').style.borderColor = '#f2b705';
+      taskA.style.opacity = String(1 - progress * 0.18);
+    }
+  </script>
+</body>
+</html>
