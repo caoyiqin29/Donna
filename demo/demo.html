@@ -9,37 +9,39 @@
     body {
       display: grid;
       place-items: center;
-      background: #f2f3f5;
+      background: #f1f2f4;
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
       letter-spacing: 0;
     }
     .panel {
+      --panel: #48494b;
+      --text: #f0f3f7;
+      --muted: #aeb7c5;
+      --check: #8f9aa9;
+      --menu: #303236;
+      --menu-border: #555960;
       position: relative;
       width: 390px;
       height: 600px;
       overflow: hidden;
       border: 1px solid rgba(255,255,255,.14);
       border-radius: 16px;
-      background: rgba(24,25,28,.91);
-      box-shadow: 0 20px 52px rgba(0,0,0,.25), 0 2px 8px rgba(0,0,0,.18);
-      color: #eceef1;
+      background: var(--panel);
+      box-shadow: 0 20px 52px rgba(0,0,0,.22), 0 2px 8px rgba(0,0,0,.16);
+      color: var(--text);
     }
     .traffic { position: absolute; top: 14px; left: 14px; display: flex; gap: 8px; }
     .traffic span { width: 12px; height: 12px; border-radius: 50%; }
     .red { background: #ff5f57; }
     .yellow { background: #febc2e; }
     .green { background: #28c840; }
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin: 48px 32px 14px;
-      height: 25px;
-    }
-    h1 { margin: 0; font-size: 15px; line-height: 22px; font-weight: 650; }
-    .tools { display: flex; align-items: center; gap: 6px; color: #aeb7c5; }
-    .tool { width: 28px; height: 24px; display: grid; place-items: center; }
+    .header { display: flex; align-items: center; justify-content: space-between; margin: 48px 32px 14px; height: 25px; }
+    h1 { margin: 0; color: var(--text); font-size: 15px; line-height: 22px; font-weight: 650; }
+    .tools { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+    .tool { position: relative; width: 28px; height: 24px; display: grid; place-items: center; border-radius: 7px; }
+    .tool.active { color: var(--text); background: rgba(255,255,255,.10); }
     .tool svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .moon { display: none; }
     .list { position: relative; margin: 0 32px; height: 190px; }
     .todo {
       position: absolute;
@@ -50,7 +52,6 @@
       column-gap: 3px;
       width: 100%;
       min-height: 30px;
-      transition: none;
     }
     .check {
       width: 18px;
@@ -58,9 +59,9 @@
       margin-top: 3px;
       display: grid;
       place-items: center;
-      border: 1.5px solid #8f9aa9;
+      border: 1.5px solid var(--check);
       border-radius: 50%;
-      color: white;
+      color: #fff;
       font-size: 12px;
       line-height: 1;
     }
@@ -74,26 +75,72 @@
     }
     .p0 { color: #f15b9a; }
     .p1 { color: #f2b705; }
-    .title { padding: 1px 4px 1px 0; font-size: 14px; line-height: 22px; font-weight: 450; color: #f0f3f7; }
+    .meeting { color: #46b9e9; font-weight: 600; font-style: oblique 2deg; }
+    .title { padding: 1px 4px 1px 0; color: var(--text); font-size: 14px; line-height: 22px; font-weight: 450; }
     .done .check { border-color: #f2b705; background: #f2b705; }
-    .done .title { color: #9aa3b1; }
-    .typing .title { color: #f0f3f7; }
-    .caret {
-      display: inline-block;
-      width: 1.5px;
-      height: 17px;
-      margin-left: 1px;
-      vertical-align: -3px;
-      background: #f1f4f8;
-    }
-    .hint {
+    .done .title { color: var(--muted); }
+    .caret { display: inline-block; width: 1.5px; height: 17px; margin-left: 1px; vertical-align: -3px; background: var(--text); }
+    .priority-menu {
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 28px;
-      color: #747a83;
+      left: 20px;
+      top: 68px;
+      z-index: 10;
+      width: 74px;
+      padding: 4px;
+      overflow: hidden;
+      border: 1px solid var(--menu-border);
+      border-radius: 9px;
+      background: var(--menu);
+      box-shadow: 0 8px 20px rgba(0,0,0,.18);
+      opacity: 0;
+      transform: translateY(-3px);
+    }
+    .priority-menu.open { opacity: 1; transform: translateY(0); }
+    .option { height: 30px; padding: 0 9px; border-radius: 4px; font: 600 13px/30px "Avenir Next", "PingFang SC", sans-serif; }
+    .option.selected { background: rgba(255,255,255,.12); }
+    .tooltip {
+      position: absolute;
+      z-index: 20;
+      top: 82px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: #151619;
+      color: #f6f7f8;
       font-size: 11px;
-      text-align: center;
+      line-height: 16px;
+      white-space: nowrap;
+      opacity: 0;
+    }
+    .tooltip::before { content: ""; position: absolute; top: -4px; left: 50%; width: 8px; height: 8px; background: #151619; transform: translateX(-50%) rotate(45deg); }
+    .theme-tip { right: 70px; }
+    .clear-tip { right: 20px; }
+    .cursor {
+      position: absolute;
+      z-index: 30;
+      width: 14px;
+      height: 18px;
+      opacity: 0;
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,.35));
+    }
+    .cursor::before {
+      content: "";
+      position: absolute;
+      width: 0;
+      height: 0;
+      border-top: 15px solid #fff;
+      border-right: 10px solid transparent;
+      transform: rotate(-20deg);
+    }
+    .cursor::after {
+      content: "";
+      position: absolute;
+      left: 2px;
+      top: 2px;
+      width: 0;
+      height: 0;
+      border-top: 11px solid #202226;
+      border-right: 7px solid transparent;
+      transform: rotate(-20deg);
     }
   </style>
 </head>
@@ -103,50 +150,106 @@
     <header class="header">
       <h1>每日任务</h1>
       <div class="tools">
-        <span class="tool"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M6.35 17.65l-1.42 1.42M19.07 4.93l-1.42 1.42"/></svg></span>
+        <span class="tool theme-tool">
+          <svg class="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v2M12 20v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2 12h2M20 12h2M6.35 17.65l-1.42 1.42M19.07 4.93l-1.42 1.42"/></svg>
+          <svg class="moon" viewBox="0 0 24 24"><path d="M20.7 15.1A8.5 8.5 0 0 1 8.9 3.3 8.5 8.5 0 1 0 20.7 15.1Z"/></svg>
+        </span>
         <span class="tool"><svg viewBox="0 0 24 24"><path d="M4 7h8M4 12h6M4 17h4M17 5v14M14 16l3 3 3-3"/></svg></span>
-        <span class="tool"><svg viewBox="0 0 32 32"><path d="M13 14V6.7a3 3 0 0 1 6 0V14M8.5 14h15M9.5 14l-1.8 11h16.6l-1.8-11M12.8 25v-5.2M16 25v-5.2M19.2 25v-5.2"/></svg></span>
+        <span class="tool clear-tool"><svg viewBox="0 0 32 32"><path d="M13 14V6.7a3 3 0 0 1 6 0V14M8.5 14h15M9.5 14l-1.8 11h16.6l-1.8-11M12.8 25v-5.2M16 25v-5.2M19.2 25v-5.2"/></svg></span>
       </div>
     </header>
+    <div class="tooltip theme-tip">切换到浅色</div>
+    <div class="tooltip clear-tip">清理完成</div>
     <div class="list">
-      <div class="todo task-a">
-        <span class="check"><span class="tick"></span></span><span class="priority p0">P0</span><span class="title">提交周报 10:00</span>
-      </div>
-      <div class="todo task-b">
-        <span class="check"></span><span class="priority p1">P1</span><span class="title">回复项目邮件 14:30</span>
-      </div>
-      <div class="todo task-c typing">
-        <span class="check"></span><span class="priority p1">P1</span><span class="title"><span class="typed"></span><span class="caret"></span></span>
+      <div class="todo task-a"><span class="check"><span class="tick"></span></span><span class="priority p0">P0</span><span class="title">提交周报 10:00</span></div>
+      <div class="todo task-b"><span class="check"></span><span class="priority p1">P1</span><span class="title">回复项目邮件 14:30</span></div>
+      <div class="todo task-c"><span class="check"></span><span class="priority task-c-priority p1">P1</span><span class="title"><span class="typed"></span><span class="caret"></span></span></div>
+      <div class="priority-menu">
+        <div class="option p0">P0</div><div class="option p1">P1</div><div class="option meeting">会议</div>
       </div>
     </div>
-    <div class="hint">任务内容仅保存在本地</div>
+    <div class="cursor"></div>
   </section>
   <script>
     const frame = Number(new URLSearchParams(location.search).get('frame') || 0);
+    const clamp = value => Math.max(0, Math.min(1, value));
     const text = '整理明日计划 18:00';
-    const typingStart = 5;
-    const typedCount = Math.max(0, Math.min(text.length, frame - typingStart));
-    const moveStart = 35;
-    const moveEnd = 42;
-    const progress = Math.max(0, Math.min(1, (frame - moveStart) / (moveEnd - moveStart)));
-
-    document.querySelector('.typed').textContent = text.slice(0, typedCount);
-    document.querySelector('.task-c').style.opacity = frame < 3 ? '0' : '1';
-    document.querySelector('.caret').style.opacity = frame >= 32 ? '0' : (frame % 6 < 4 ? '1' : '0');
-
+    const typedCount = Math.max(0, Math.min(text.length, frame - 5));
+    const reorder = clamp((frame - 34) / 7);
+    const menuVisible = frame >= 47 && frame < 60;
+    const meetingSelected = frame >= 58;
+    const themeProgress = clamp((frame - 70) / 8);
+    const clearProgress = clamp((frame - 94) / 7);
+    const panel = document.querySelector('.panel');
     const taskA = document.querySelector('.task-a');
     const taskB = document.querySelector('.task-b');
     const taskC = document.querySelector('.task-c');
-    taskA.style.transform = `translateY(${progress * 80}px)`;
-    taskB.style.transform = `translateY(${-progress * 40 + 40}px)`;
-    taskC.style.transform = `translateY(${80 - progress * 40}px)`;
+    const cursor = document.querySelector('.cursor');
 
-    if (progress > 0) {
+    function mix(from, to, amount) {
+      return `rgb(${from.map((value, i) => Math.round(value + (to[i] - value) * amount)).join(',')})`;
+    }
+
+    panel.style.setProperty('--panel', mix([72,73,75], [244,245,246], themeProgress));
+    panel.style.setProperty('--text', mix([240,243,247], [41,45,51], themeProgress));
+    panel.style.setProperty('--muted', mix([174,183,197], [119,127,137], themeProgress));
+    panel.style.setProperty('--check', mix([143,154,169], [125,134,146], themeProgress));
+    panel.style.setProperty('--menu', mix([48,50,54], [243,244,246], themeProgress));
+    panel.style.setProperty('--menu-border', mix([85,89,96], [199,203,209], themeProgress));
+    panel.style.borderColor = mix([95,96,99], [218,221,225], themeProgress);
+    panel.style.boxShadow = `0 20px 52px rgba(0,0,0,${0.22 - themeProgress * 0.10}), 0 2px 8px rgba(0,0,0,.14)`;
+
+    document.querySelector('.typed').textContent = text.slice(0, typedCount);
+    taskC.style.opacity = frame < 3 ? '0' : '1';
+    document.querySelector('.caret').style.opacity = frame >= 31 || frame % 6 >= 4 ? '0' : '1';
+
+    taskA.style.transform = `translateY(${reorder * 80}px)`;
+    taskB.style.transform = `translateY(${40 - reorder * 40}px)`;
+    taskC.style.transform = `translateY(${80 - reorder * 40}px)`;
+    if (reorder > 0) {
       taskA.classList.add('done');
       taskA.querySelector('.tick').textContent = '✓';
-      taskA.querySelector('.check').style.background = `rgba(242,183,5,${progress})`;
+      taskA.querySelector('.check').style.background = '#f2b705';
       taskA.querySelector('.check').style.borderColor = '#f2b705';
-      taskA.style.opacity = String(1 - progress * 0.18);
+      taskA.style.opacity = String((1 - reorder * .18) * (1 - clearProgress));
+    }
+
+    const menu = document.querySelector('.priority-menu');
+    menu.classList.toggle('open', menuVisible);
+    if (frame >= 54 && frame < 60) menu.querySelector('.meeting').classList.add('selected');
+    if (meetingSelected) {
+      const priority = document.querySelector('.task-c-priority');
+      priority.textContent = '会议';
+      priority.className = 'priority task-c-priority meeting';
+    }
+
+    const themeTool = document.querySelector('.theme-tool');
+    const clearTool = document.querySelector('.clear-tool');
+    const themeTip = document.querySelector('.theme-tip');
+    const clearTip = document.querySelector('.clear-tip');
+    if (frame >= 65 && frame < 79) {
+      themeTool.classList.add('active');
+      themeTip.style.opacity = '1';
+      cursor.style.opacity = '1';
+      cursor.style.left = '286px';
+      cursor.style.top = '55px';
+    }
+    if (frame >= 78) {
+      document.querySelector('.sun').style.display = 'none';
+      document.querySelector('.moon').style.display = 'block';
+      themeTip.textContent = '切换到深色';
+    }
+    if (frame >= 88 && frame < 103) {
+      clearTool.classList.add('active');
+      clearTip.style.opacity = '1';
+      cursor.style.opacity = '1';
+      cursor.style.left = '354px';
+      cursor.style.top = '55px';
+    }
+    if (frame >= 47 && frame < 60) {
+      cursor.style.opacity = '1';
+      cursor.style.left = '87px';
+      cursor.style.top = frame < 54 ? '139px' : '207px';
     }
   </script>
 </body>
