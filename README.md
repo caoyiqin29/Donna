@@ -9,7 +9,7 @@
 ## 演示
 
 <p align="center">
-  <img src="demo/daily-todo-demo.gif" width="520" alt="每日待办输入与完成任务演示">
+  <img src="demo/daily-todo-demo.gif?v=4f29c21" width="520" alt="每日待办输入与完成任务演示">
 </p>
 
 ## 功能
