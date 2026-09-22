@@ -8,10 +8,51 @@
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
     body {
       position: relative;
-      background: #f1f2f4;
+      background: #10151c;
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
       letter-spacing: 0;
     }
+    .scene { position: absolute; inset: 0; overflow: hidden; background: #151b23; }
+    .ribbon {
+      position: absolute;
+      left: -150px;
+      width: 820px;
+      border-radius: 42%;
+      filter: blur(34px);
+      opacity: .62;
+      will-change: transform;
+    }
+    .ribbon-blue { top: -40px; height: 230px; background: rgba(70,185,233,.52); transform: rotate(-13deg); }
+    .ribbon-pink { top: 190px; height: 185px; background: rgba(241,91,154,.40); transform: rotate(17deg); }
+    .ribbon-gold { top: 470px; height: 170px; background: rgba(242,183,5,.32); transform: rotate(-10deg); }
+    .glass-sheet {
+      position: absolute;
+      left: -80px;
+      top: 125px;
+      width: 680px;
+      height: 380px;
+      border: 1px solid rgba(255,255,255,.30);
+      border-radius: 46% 54% 40% 60%;
+      background: rgba(255,255,255,.10);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.36), inset 0 -1px 0 rgba(255,255,255,.10);
+      backdrop-filter: blur(42px) saturate(138%);
+      transform: rotate(-8deg);
+      will-change: transform;
+    }
+    .sheen {
+      position: absolute;
+      left: -160px;
+      top: 305px;
+      width: 840px;
+      height: 74px;
+      border-top: 1px solid rgba(255,255,255,.44);
+      border-bottom: 1px solid rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+      filter: blur(8px);
+      transform: rotate(-18deg);
+      will-change: transform;
+    }
+    .camera { position: absolute; inset: 0; transform-origin: 50% 50%; will-change: transform; }
     .panel {
       --panel: #48494b;
       --text: #f0f3f7;
@@ -30,6 +71,7 @@
       background: var(--panel);
       box-shadow: 0 20px 52px rgba(0,0,0,.22), 0 2px 8px rgba(0,0,0,.16);
       color: var(--text);
+      will-change: left, top, width, height, border-radius;
     }
     .traffic { position: absolute; top: 14px; left: 14px; display: flex; gap: 8px; }
     .traffic span { position: relative; width: 12px; height: 12px; border-radius: 50%; }
@@ -151,15 +193,22 @@
       display: grid;
       place-content: center;
       gap: 1px;
-      color: #24272c;
+      color: #f0f3f7;
       text-align: center;
       opacity: 0;
     }
     .bubble-count strong { font-size: 26px; line-height: .88; font-weight: 850; }
-    .bubble-count small { color: #717780; font-size: 11px; line-height: 1; font-weight: 650; }
+    .bubble-count small { color: #aeb7c5; font-size: 11px; line-height: 1; font-weight: 650; }
   </style>
 </head>
 <body>
+  <main class="scene">
+    <div class="ribbon ribbon-blue"></div>
+    <div class="ribbon ribbon-pink"></div>
+    <div class="ribbon ribbon-gold"></div>
+    <div class="glass-sheet"></div>
+    <div class="sheen"></div>
+    <div class="camera">
   <section class="panel">
     <div class="traffic"><span class="red"></span><span class="yellow"></span><span class="green"></span></div>
     <header class="header">
@@ -186,19 +235,26 @@
     <div class="cursor"></div>
     <div class="bubble-count"><strong>2</strong><small>待办</small></div>
   </section>
+    </div>
+  </main>
   <script>
     const frame = Number(new URLSearchParams(location.search).get('frame') || 0);
     const clamp = value => Math.max(0, Math.min(1, value));
+    const ease = value => {
+      const t = clamp(value);
+      return t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    };
+    const lerp = (from, to, amount) => from + (to - from) * amount;
     const text = '整理明日计划 18:00';
-    const typedCount = Math.max(0, Math.min(text.length, frame - 5));
-    const reorder = clamp((frame - 34) / 7);
-    const menuVisible = frame >= 47 && frame < 60;
-    const meetingSelected = frame >= 58;
-    const themeProgress = clamp((frame - 70) / 8);
-    const clearProgress = clamp((frame - 94) / 7);
-    const collapseHeightProgress = clamp((frame - 118) / 6);
-    const collapseSizeProgress = clamp((frame - 124) / 8);
-    const collapseProgress = Math.max(collapseHeightProgress, collapseSizeProgress);
+    const openSize = ease((frame - 12) / 9);
+    const openHeight = ease((frame - 20) / 9);
+    const openProgress = Math.max(openSize, openHeight);
+    const typedCount = Math.max(0, Math.min(text.length, frame - 32));
+    const reorder = ease((frame - 53) / 7);
+    const menuVisible = frame >= 67 && frame < 81;
+    const meetingSelected = frame >= 78;
+    const themeProgress = ease((frame - 92) / 9);
+    const clearProgress = ease((frame - 112) / 7);
     const panel = document.querySelector('.panel');
     const taskA = document.querySelector('.task-a');
     const taskB = document.querySelector('.task-b');
@@ -218,9 +274,43 @@
     panel.style.borderColor = mix([95,96,99], [218,221,225], themeProgress);
     panel.style.boxShadow = `0 20px 52px rgba(0,0,0,${0.22 - themeProgress * 0.10}), 0 2px 8px rgba(0,0,0,.14)`;
 
+    const width = lerp(68, 390, openSize);
+    const height = lerp(68, 390, openSize) + lerp(0, 210, openHeight);
+    panel.style.width = `${width}px`;
+    panel.style.height = `${height}px`;
+    panel.style.left = `${260 - width / 2}px`;
+    panel.style.top = `${340 - height / 2}px`;
+    panel.style.borderRadius = `${lerp(34, 16, openProgress)}px`;
+    const contentOpacity = clamp((openHeight - .18) / .56);
+    document.querySelectorAll('.traffic, .header, .list, .cursor').forEach(node => {
+      node.style.opacity = String(contentOpacity);
+    });
+    document.querySelector('.bubble-count').style.opacity = String(1 - clamp(openSize / .62));
+
+    let cameraScale = lerp(1.16, 1, openProgress);
+    let cameraX = lerp(-6, 0, openProgress);
+    let cameraY = lerp(10, 0, openProgress);
+    const menuFocus = ease((frame - 62) / 8) * (1 - ease((frame - 82) / 7));
+    const toolFocus = ease((frame - 85) / 8) * (1 - ease((frame - 105) / 8));
+    const finishSettle = ease((frame - 119) / 12);
+    cameraScale += menuFocus * .045 + toolFocus * .055;
+    cameraX += menuFocus * 8 - toolFocus * 10;
+    cameraY += menuFocus * -12 + toolFocus * 18;
+    cameraScale = lerp(cameraScale, 1, finishSettle);
+    cameraX = lerp(cameraX, 0, finishSettle);
+    cameraY = lerp(cameraY, 0, finishSettle);
+    document.querySelector('.camera').style.transform = `translate(${cameraX}px, ${cameraY}px) scale(${cameraScale})`;
+
+    const drift = frame * .32;
+    document.querySelector('.ribbon-blue').style.transform = `translate(${drift * .22}px, ${Math.sin(frame / 18) * 8}px) rotate(-13deg)`;
+    document.querySelector('.ribbon-pink').style.transform = `translate(${-drift * .16}px, ${Math.cos(frame / 20) * 10}px) rotate(17deg)`;
+    document.querySelector('.ribbon-gold').style.transform = `translate(${drift * .12}px, ${Math.sin(frame / 24) * 7}px) rotate(-10deg)`;
+    document.querySelector('.glass-sheet').style.transform = `translate(${Math.sin(frame / 28) * 10}px, ${Math.cos(frame / 32) * 7}px) rotate(-8deg)`;
+    document.querySelector('.sheen').style.transform = `translateX(${(frame - 40) * 1.1}px) rotate(-18deg)`;
+
     document.querySelector('.typed').textContent = text.slice(0, typedCount);
-    taskC.style.opacity = frame < 3 ? '0' : '1';
-    document.querySelector('.caret').style.opacity = frame >= 31 || frame % 6 >= 4 ? '0' : '1';
+    taskC.style.opacity = frame < 30 ? '0' : '1';
+    document.querySelector('.caret').style.opacity = frame >= 50 || frame % 6 >= 4 ? '0' : '1';
 
     taskA.style.transform = `translateY(${reorder * 80}px)`;
     taskB.style.transform = `translateY(${40 - reorder * 40}px)`;
@@ -235,7 +325,7 @@
 
     const menu = document.querySelector('.priority-menu');
     menu.classList.toggle('open', menuVisible);
-    if (frame >= 54 && frame < 60) menu.querySelector('.meeting').classList.add('selected');
+    if (frame >= 75 && frame < 81) menu.querySelector('.meeting').classList.add('selected');
     if (meetingSelected) {
       const priority = document.querySelector('.task-c-priority');
       priority.textContent = '会议';
@@ -246,52 +336,29 @@
     const clearTool = document.querySelector('.clear-tool');
     const themeTip = document.querySelector('.theme-tip');
     const clearTip = document.querySelector('.clear-tip');
-    if (frame >= 65 && frame < 79) {
+    if (frame >= 86 && frame < 102) {
       themeTool.classList.add('active');
       themeTip.style.opacity = '1';
       cursor.style.opacity = '1';
       cursor.style.left = '286px';
       cursor.style.top = '55px';
     }
-    if (frame >= 78) {
+    if (frame >= 100) {
       document.querySelector('.sun').style.display = 'none';
       document.querySelector('.moon').style.display = 'block';
       themeTip.textContent = '切换到深色';
     }
-    if (frame >= 88 && frame < 103) {
+    if (frame >= 106 && frame < 121) {
       clearTool.classList.add('active');
       clearTip.style.opacity = '1';
       cursor.style.opacity = '1';
       cursor.style.left = '354px';
       cursor.style.top = '55px';
     }
-    if (frame >= 47 && frame < 60) {
+    if (frame >= 67 && frame < 81) {
       cursor.style.opacity = '1';
       cursor.style.left = '87px';
-      cursor.style.top = frame < 54 ? '139px' : '207px';
-    }
-    if (frame >= 108 && frame < 120) {
-      document.querySelector('.red').classList.add('hovered');
-      cursor.style.opacity = '1';
-      cursor.style.left = '18px';
-      cursor.style.top = '13px';
-    }
-
-    if (collapseProgress > 0) {
-      const width = 390 - 322 * collapseSizeProgress;
-      const height = 600 - 210 * collapseHeightProgress - 322 * collapseSizeProgress;
-      panel.style.width = `${width}px`;
-      panel.style.height = `${height}px`;
-      panel.style.left = `${65 + 322 * collapseSizeProgress}px`;
-      panel.style.top = `${40 + 210 * collapseHeightProgress + 322 * collapseSizeProgress}px`;
-      panel.style.borderRadius = `${16 + 18 * collapseSizeProgress}px`;
-      panel.style.borderColor = mix([218,221,225], [168,173,181], collapseProgress);
-      panel.style.boxShadow = `0 ${20 - collapseProgress * 14}px ${52 - collapseProgress * 36}px rgba(0,0,0,${.12 - collapseProgress * .04})`;
-      const contentOpacity = 1 - collapseHeightProgress;
-      document.querySelectorAll('.traffic, .header, .list, .cursor').forEach(node => {
-        node.style.opacity = String(contentOpacity);
-      });
-      document.querySelector('.bubble-count').style.opacity = String(clamp((collapseSizeProgress - .68) / .22));
+      cursor.style.top = frame < 75 ? '139px' : '207px';
     }
   </script>
 </body>
