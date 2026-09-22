@@ -7,8 +7,7 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; }
     body {
-      display: grid;
-      place-items: center;
+      position: relative;
       background: #f1f2f4;
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
       letter-spacing: 0;
@@ -20,7 +19,9 @@
       --check: #8f9aa9;
       --menu: #303236;
       --menu-border: #555960;
-      position: relative;
+      position: absolute;
+      left: 65px;
+      top: 40px;
       width: 390px;
       height: 600px;
       overflow: hidden;
@@ -31,7 +32,9 @@
       color: var(--text);
     }
     .traffic { position: absolute; top: 14px; left: 14px; display: flex; gap: 8px; }
-    .traffic span { width: 12px; height: 12px; border-radius: 50%; }
+    .traffic span { position: relative; width: 12px; height: 12px; border-radius: 50%; }
+    .red::after { content: "×"; position: absolute; inset: -3px 0 0; color: #7b1714; font: 700 10px/12px -apple-system, sans-serif; text-align: center; opacity: 0; }
+    .red.hovered::after { opacity: 1; }
     .red { background: #ff5f57; }
     .yellow { background: #febc2e; }
     .green { background: #28c840; }
@@ -142,6 +145,18 @@
       border-right: 7px solid transparent;
       transform: rotate(-20deg);
     }
+    .bubble-count {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-content: center;
+      gap: 1px;
+      color: #24272c;
+      text-align: center;
+      opacity: 0;
+    }
+    .bubble-count strong { font-size: 26px; line-height: .88; font-weight: 850; }
+    .bubble-count small { color: #717780; font-size: 11px; line-height: 1; font-weight: 650; }
   </style>
 </head>
 <body>
@@ -169,6 +184,7 @@
       </div>
     </div>
     <div class="cursor"></div>
+    <div class="bubble-count"><strong>2</strong><small>待办</small></div>
   </section>
   <script>
     const frame = Number(new URLSearchParams(location.search).get('frame') || 0);
@@ -180,6 +196,9 @@
     const meetingSelected = frame >= 58;
     const themeProgress = clamp((frame - 70) / 8);
     const clearProgress = clamp((frame - 94) / 7);
+    const collapseHeightProgress = clamp((frame - 118) / 6);
+    const collapseSizeProgress = clamp((frame - 124) / 8);
+    const collapseProgress = Math.max(collapseHeightProgress, collapseSizeProgress);
     const panel = document.querySelector('.panel');
     const taskA = document.querySelector('.task-a');
     const taskB = document.querySelector('.task-b');
@@ -250,6 +269,29 @@
       cursor.style.opacity = '1';
       cursor.style.left = '87px';
       cursor.style.top = frame < 54 ? '139px' : '207px';
+    }
+    if (frame >= 108 && frame < 120) {
+      document.querySelector('.red').classList.add('hovered');
+      cursor.style.opacity = '1';
+      cursor.style.left = '18px';
+      cursor.style.top = '13px';
+    }
+
+    if (collapseProgress > 0) {
+      const width = 390 - 322 * collapseSizeProgress;
+      const height = 600 - 210 * collapseHeightProgress - 322 * collapseSizeProgress;
+      panel.style.width = `${width}px`;
+      panel.style.height = `${height}px`;
+      panel.style.left = `${65 + 322 * collapseSizeProgress}px`;
+      panel.style.top = `${40 + 210 * collapseHeightProgress + 322 * collapseSizeProgress}px`;
+      panel.style.borderRadius = `${16 + 18 * collapseSizeProgress}px`;
+      panel.style.borderColor = mix([218,221,225], [168,173,181], collapseProgress);
+      panel.style.boxShadow = `0 ${20 - collapseProgress * 14}px ${52 - collapseProgress * 36}px rgba(0,0,0,${.12 - collapseProgress * .04})`;
+      const contentOpacity = 1 - collapseHeightProgress;
+      document.querySelectorAll('.traffic, .header, .list, .cursor').forEach(node => {
+        node.style.opacity = String(contentOpacity);
+      });
+      document.querySelector('.bubble-count').style.opacity = String(clamp((collapseSizeProgress - .68) / .22));
     }
   </script>
 </body>
